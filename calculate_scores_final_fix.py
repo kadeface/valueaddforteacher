@@ -100,20 +100,26 @@ def extract_exam_names(df, subject):
     
     return sorted_exams, found_exams
 
-def calculate_scores_final_fix(input_file_path=None, subject=None):
-    """最终修复版本，确保所有指标都有完整的差值列、差值排名列、差值得分列"""
+def calculate_scores_final_fix(input_file_path=None, subject=None, scoring_method='fixed'):
+    """最终修复版本，确保所有指标都有完整的差值列、差值排名列、差值得分列
+    
+    Args:
+        input_file_path: 输入文件路径
+        subject: 科目名称
+        scoring_method: 赋分方式，'fixed'为固定区间，'percentage'为百分比区间
+    """
     
     if input_file_path is None:
         input_file_path = 'data/2025Mid3.xls'
     
     if subject is None:
         # 如果没有指定科目，处理所有科目
-        return process_all_subjects(input_file_path)
+        return process_all_subjects(input_file_path, scoring_method)
     else:
         # 处理指定科目
-        return process_single_subject(input_file_path, subject)
+        return process_single_subject(input_file_path, subject, scoring_method)
 
-def process_single_subject(input_file_path, subject):
+def process_single_subject(input_file_path, subject, scoring_method='fixed'):
     """处理单个科目"""
     print(f"开始处理科目: {subject}")
     
@@ -159,9 +165,30 @@ def process_single_subject(input_file_path, subject):
             intervals = [(1, 18, 8, 8.9), (19, 43, 6, 6.9), (44, 71, 5, 5.9), 
                         (72, 106, 4, 4.9), (107, 134, 3, 3.9), (135, 159, 2, 2.9), (160, total_count, 0, 0)]
         
+        # 定义百分比区间赋分规则
+        # 百分比区间：10%, 14%, 16%, 20%, 16%, 14%, 10%
+        # 对应赋分：8/8.9, 6/6.9, 5/5.9, 4/4.9, 3/3.9, 2/2.9, 0/0
+        percentage_intervals = [
+            (0, 0.10, 8, 8.9),      # 前10%
+            (0.10, 0.24, 6, 6.9),   # 10%-24%
+            (0.24, 0.40, 5, 5.9),   # 24%-40%
+            (0.40, 0.60, 4, 4.9),   # 40%-60%
+            (0.60, 0.76, 3, 3.9),   # 60%-76%
+            (0.76, 0.90, 2, 2.9),   # 76%-90%
+            (0.90, 1.00, 0, 0)      # 90%-100%
+        ]
+        
         def assign_score(rank, is_jinshan):
             for start, end, regular_score, jinshan_score in intervals:
                 if start <= rank <= end:
+                    return jinshan_score if is_jinshan else regular_score
+            return 0
+        
+        def assign_score_by_percentage(rank, total_count, is_jinshan):
+            """基于百分比的赋分函数"""
+            percentage = rank / total_count
+            for start_pct, end_pct, regular_score, jinshan_score in percentage_intervals:
+                if start_pct <= percentage <= end_pct:
                     return jinshan_score if is_jinshan else regular_score
             return 0
         
@@ -253,7 +280,10 @@ def process_single_subject(input_file_path, subject):
                         
                         for idx, row in sorted_df.iterrows():
                             rank = idx + 1
-                            score = assign_score(rank, False)  # 非金山中学使用常规赋分
+                            if scoring_method == 'percentage':
+                                score = assign_score_by_percentage(rank, len(non_jinshan_df), False)
+                            else:
+                                score = assign_score(rank, False)  # 非金山中学使用常规赋分
                             
                             # 找到对应的原始行索引
                             original_idx = df[(df['学校代码'] == row['学校代码']) & (df['班别'] == row['班别'])].index[0]
@@ -276,7 +306,10 @@ def process_single_subject(input_file_path, subject):
                         for idx, row in sorted_df.iterrows():
                             rank = idx + 1
                             is_jinshan = row['学校名称'] == '金山中学'
-                            score = assign_score(rank, is_jinshan)
+                            if scoring_method == 'percentage':
+                                score = assign_score_by_percentage(rank, total_count, is_jinshan)
+                            else:
+                                score = assign_score(rank, is_jinshan)
                             
                             # 找到对应的原始行索引
                             original_idx = df[(df['学校代码'] == row['学校代码']) & (df['班别'] == row['班别'])].index[0]
@@ -392,7 +425,10 @@ def process_single_subject(input_file_path, subject):
                                 
                                 for idx, row in sorted_df.iterrows():
                                     rank = idx + 1
-                                    score = assign_score(rank, False)  # 非金山中学使用常规赋分
+                                    if scoring_method == 'percentage':
+                                        score = assign_score_by_percentage(rank, len(non_jinshan_df), False)
+                                    else:
+                                        score = assign_score(rank, False)  # 非金山中学使用常规赋分
                                     
                                     # 找到对应的原始行索引
                                     original_idx = df[(df['学校代码'] == row['学校代码']) & (df['班别'] == row['班别'])].index[0]
@@ -415,7 +451,10 @@ def process_single_subject(input_file_path, subject):
                                 for idx, row in sorted_df.iterrows():
                                     rank = idx + 1
                                     is_jinshan = row['学校名称'] == '金山中学'
-                                    score = assign_score(rank, is_jinshan)
+                                    if scoring_method == 'percentage':
+                                        score = assign_score_by_percentage(rank, total_count, is_jinshan)
+                                    else:
+                                        score = assign_score(rank, is_jinshan)
                                     
                                     # 找到对应的原始行索引
                                     original_idx = df[(df['学校代码'] == row['学校代码']) & (df['班别'] == row['班别'])].index[0]
@@ -497,13 +536,14 @@ def process_single_subject(input_file_path, subject):
         traceback.print_exc()
         return None
 
-def process_all_subjects(input_file_path):
+def process_all_subjects(input_file_path, scoring_method='fixed'):
     """处理所有科目"""
     # 获取Excel文件中的所有科目
     xl_file = pd.ExcelFile(input_file_path)
     subjects = [sheet for sheet in xl_file.sheet_names if sheet != 'sheet1']
     
     print(f"发现科目: {subjects}")
+    print(f"使用赋分方式: {scoring_method}")
     print("=" * 50)
     
     all_results = {}
@@ -512,7 +552,7 @@ def process_all_subjects(input_file_path):
     for subject in subjects:
         print(f"\n开始处理科目: {subject}")
         try:
-            result = process_single_subject(input_file_path, subject)
+            result = process_single_subject(input_file_path, subject, scoring_method)
             if result is not None:
                 all_results[subject] = result
                 print(f"✅ {subject} 处理成功！")
