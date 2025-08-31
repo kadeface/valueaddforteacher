@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开平市教师教学增值评价系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px dashed #dee2e6;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-input-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .selected-file {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            display: none;
+        }
+
+        .subject-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .subject-section h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .subject-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .subject-option {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subject-option:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .subject-option.selected {
+            border-color: #4facfe;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .process-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+            margin: 0 10px;
+        }
+
+        .process-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.6);
+        }
+
+        .process-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .download-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            display: none;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            background: #343a40;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 开平市教师教学增值评价系统</h1>
+            <p>智能分析教师教学成绩，自动计算排名和赋分</p>
+        </div>
+
+        <div class="content">
+            <!-- 文件上传区域 -->
+            <div class="upload-section">
+                <h3>📁 选择Excel文件</h3>
+                <p>请选择包含教师成绩数据的Excel文件（.xls或.xlsx格式）</p>
+                
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" class="file-input" accept=".xls,.xlsx">
+                    <button class="file-input-btn" onclick="document.getElementById('fileInput').click()">
+                        📂 选择文件
+                    </button>
+                </div>
+                
+                <div id="selectedFile" class="selected-file">
+                    <strong>已选择文件：</strong><span id="fileName"></span>
+                </div>
+            </div>
+
+            <!-- 科目选择区域 -->
+            <div class="subject-section">
+                <h3>📚 选择处理科目</h3>
+                <p>选择要处理的科目，或选择"所有科目"处理全部</p>
+                
+                <div class="subject-options">
+                    <div class="subject-option" data-subject="">
+                        <strong>🏫 所有科目</strong><br>
+                        <small>处理Excel中的所有科目数据</small>
+                    </div>
+                    <div class="subject-option" data-subject="语文">
+                        <strong>📖 语文</strong>
+                    </div>
+                    <div class="subject-option" data-subject="数学">
+                        <strong>🔢 数学</strong>
+                    </div>
+                    <div class="subject-option" data-subject="英语">
+                        <strong>🌍 英语</strong>
+                    </div>
+                    <div class="subject-option" data-subject="物理">
+                        <strong>⚡ 物理</strong>
+                    </div>
+                    <div class="subject-option" data-subject="化学">
+                        <strong>🧪 化学</strong>
+                    </div>
+                    <div class="subject-option" data-subject="生物">
+                        <strong>🌱 生物</strong>
+                    </div>
+                    <div class="subject-option" data-subject="政治">
+                        <strong>🏛️ 政治</strong>
+                    </div>
+                    <div class="subject-option" data-subject="历史">
+                        <strong>📜 历史</strong>
+                    </div>
+                    <div class="subject-option" data-subject="地理">
+                        <strong>🌍 地理</strong>
+                    </div>
+                    <div class="subject-option" data-subject="科学">
+                        <strong>🔬 科学</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 处理按钮区域 -->
+            <div class="process-section">
+                <button id="processBtn" class="process-btn" onclick="startProcessing()">
+                    🚀 开始处理
+                </button>
+            </div>
+
+            <!-- 进度显示区域 -->
+            <div id="progressSection" class="progress-section">
+                <h3>⏳ 处理进度</h3>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">准备开始...</div>
+            </div>
+
+            <!-- 下载区域 -->
+            <div id="downloadSection" class="download-section">
+                <h3>📥 下载结果</h3>
+                <p>处理完成！您可以下载计算结果文件</p>
+                <a id="downloadAllBtn" class="download-btn" href="#" onclick="downloadAll()">
+                    📦 下载所有文件 (ZIP)
+                </a>
+                <div id="individualDownloads"></div>
+            </div>
+
+            <!-- 提示信息 -->
+            <div id="alert" class="alert"></div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 开平市教师发展中心 廖作东 | 基于Flask和Python开发</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let selectedSubject = '';
+        let processingInterval = null;
+
+        // 文件选择处理
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('selectedFile').style.display = 'block';
+                showAlert('文件选择成功！', 'success');
+            }
+        });
+
+        // 科目选择处理
+        document.querySelectorAll('.subject-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.subject-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedSubject = this.dataset.subject;
+                showAlert(`已选择科目: ${selectedSubject || '所有科目'}`, 'info');
+            });
+        });
+
+        // 开始处理
+        function startProcessing() {
+            if (!selectedFile) {
+                showAlert('请先选择文件！', 'error');
+                return;
+            }
+
+            if (selectedSubject === undefined) {
+                showAlert('请选择要处理的科目！', 'error');
+                return;
+            }
+
+            // 上传文件
+            uploadAndProcess();
+        }
+
+        // 上传并处理文件
+        async function uploadAndProcess() {
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                // 显示进度区域
+                document.getElementById('progressSection').style.display = 'block';
+                document.getElementById('downloadSection').style.display = 'none';
+                document.getElementById('processBtn').disabled = true;
+
+                // 上传文件
+                const uploadResponse = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('文件上传失败');
+                }
+
+                const uploadResult = await uploadResponse.json();
+                
+                // 开始处理
+                const processResponse = await fetch('/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filepath: uploadResult.filepath,
+                        subject: selectedSubject
+                    })
+                });
+
+                if (!processResponse.ok) {
+                    throw new Error('处理请求失败');
+                }
+
+                // 开始轮询进度
+                startProgressPolling();
+
+            } catch (error) {
+                showAlert(`错误: ${error.message}`, 'error');
+                resetUI();
+            }
+        }
+
+        // 开始轮询进度
+        function startProgressPolling() {
+            processingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/status');
+                    const status = await response.json();
+
+                    updateProgress(status.progress, status.message);
+
+                    if (status.error) {
+                        showAlert(`处理错误: ${status.error}`, 'error');
+                        clearInterval(processingInterval);
+                        resetUI();
+                    } else if (!status.is_processing && status.progress === 100) {
+                        // 处理完成
+                        clearInterval(processingInterval);
+                        showDownloadSection(status.output_files);
+                        showAlert('处理完成！', 'success');
+                    }
+                } catch (error) {
+                    console.error('获取进度失败:', error);
+                }
+            }, 1000);
+        }
+
+        // 更新进度
+        function updateProgress(progress, message) {
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = message;
+        }
+
+        // 显示下载区域
+        function showDownloadSection(outputFiles) {
+            document.getElementById('downloadSection').style.display = 'block';
+            
+            // 显示单个文件下载链接
+            const individualDownloads = document.getElementById('individualDownloads');
+            individualDownloads.innerHTML = '';
+            
+            outputFiles.forEach(filePath => {
+                const fileName = filePath.split('/').pop();
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/download/${fileName}`;
+                downloadLink.className = 'download-btn';
+                downloadLink.textContent = `📄 ${fileName}`;
+                downloadLink.download = fileName;
+                individualDownloads.appendChild(downloadLink);
+            });
+        }
+
+        // 下载所有文件
+        function downloadAll() {
+            window.location.href = '/download_all';
+        }
+
+        // 显示提示信息
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // 重置UI
+        function resetUI() {
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('processBtn').disabled = false;
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = '准备开始...';
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 默认选择"所有科目"
+            document.querySelector('.subject-option[data-subject=""]').classList.add('selected');
+            selectedSubject = '';
+        });
+    </script>
+</body>
+</html>
