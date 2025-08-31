@@ -60,9 +60,14 @@ def process_file():
     data = request.get_json()
     filepath = data.get('filepath')
     subject = data.get('subject', '')  # 空字符串表示处理所有科目
+    scoring_method = data.get('scoring_method', 'fixed')  # 赋分方式，默认为固定区间
     
     if not filepath or not os.path.exists(filepath):
         return jsonify({'error': '文件不存在'}), 400
+    
+    # 验证赋分方式
+    if scoring_method not in ['fixed', 'percentage']:
+        return jsonify({'error': '无效的赋分方式'}), 400
     
     # 开始处理
     processing_status['is_processing'] = True
@@ -72,13 +77,13 @@ def process_file():
     processing_status['output_files'] = []
     
     # 在新线程中处理文件
-    thread = threading.Thread(target=process_file_thread, args=(filepath, subject))
+    thread = threading.Thread(target=process_file_thread, args=(filepath, subject, scoring_method))
     thread.daemon = True
     thread.start()
     
     return jsonify({'success': True, 'message': '开始处理文件'})
 
-def process_file_thread(filepath, subject):
+def process_file_thread(filepath, subject, scoring_method='fixed'):
     global processing_status
     
     try:
@@ -91,7 +96,7 @@ def process_file_thread(filepath, subject):
             processing_status['message'] = f'正在处理科目: {subject}...'
             processing_status['progress'] = 30
             
-            result_df = calculate_scores_final_fix(filepath, subject)
+            result_df = calculate_scores_final_fix(filepath, subject, scoring_method)
             if result_df is not None:
                 output_filename = f"{subject}_计算结果.xlsx"
                 output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -118,7 +123,7 @@ def process_file_thread(filepath, subject):
                 processing_status['message'] = f'正在处理科目: {subject_name} ({i+1}/{total_subjects})...'
                 processing_status['progress'] = 30 + int(50 * (i / total_subjects))
                 
-                result_df = calculate_scores_final_fix(filepath, subject_name)
+                result_df = calculate_scores_final_fix(filepath, subject_name, scoring_method)
                 if result_df is not None:
                     output_filename = f"{subject_name}_计算结果.xlsx"
                     output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)

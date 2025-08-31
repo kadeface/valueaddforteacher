@@ -145,6 +145,122 @@
             color: #1976d2;
         }
 
+        .scoring-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .scoring-option {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scoring-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .scoring-option:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.2);
+        }
+
+        .scoring-option:hover::before {
+            transform: scaleX(1);
+        }
+
+        .scoring-option.selected {
+            border-color: #4facfe;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+            color: #1976d2;
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .scoring-option.selected::before {
+            transform: scaleX(1);
+        }
+
+        .scoring-option strong {
+            font-size: 1.2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .scoring-option small {
+            color: #6c757d;
+            line-height: 1.4;
+        }
+
+        .scoring-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .scoring-info details {
+            cursor: pointer;
+        }
+
+        .scoring-info summary {
+            font-weight: bold;
+            color: #495057;
+            padding: 10px 0;
+            outline: none;
+        }
+
+        .scoring-info summary:hover {
+            color: #4facfe;
+        }
+
+        .info-content {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .info-content h4 {
+            color: #495057;
+            margin: 15px 0 10px 0;
+            font-size: 1.1em;
+        }
+
+        .info-content h4:first-child {
+            margin-top: 0;
+        }
+
+        .info-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .info-content li {
+            margin: 5px 0;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+
         .process-section {
             text-align: center;
             margin-bottom: 30px;
@@ -307,6 +423,49 @@
                 </div>
             </div>
 
+            <!-- 赋分方式选择区域 -->
+            <div class="subject-section">
+                <h3>⚖️ 选择赋分方式</h3>
+                <p>选择计算排名和赋分的方式，不同方式适用于不同规模的学校</p>
+                
+                <div class="scoring-options">
+                    <div class="scoring-option" data-method="fixed">
+                        <strong>📊 固定区间赋分</strong><br>
+                        <small>基于固定排名区间的传统赋分方式<br>
+                        适合：固定规模的学校，排名区间固定</small>
+                    </div>
+                    <div class="scoring-option" data-method="percentage">
+                        <strong>📈 百分比区间赋分</strong><br>
+                        <small>基于排名百分比的现代赋分方式<br>
+                        适合：不同规模的学校，相对排名更公平</small>
+                    </div>
+                </div>
+                
+                <div class="scoring-info">
+                    <details>
+                        <summary>📋 赋分方式详细说明</summary>
+                        <div class="info-content">
+                            <h4>固定区间赋分：</h4>
+                            <ul>
+                                <li>总人数≤20人：第1-3名8分，第4-7名6分，第8-12名5分...</li>
+                                <li>总人数>20人：第1-18名8分，第19-43名6分，第44-71名5分...</li>
+                                <li>金山中学使用特殊赋分（8.9, 6.9, 5.9...）</li>
+                            </ul>
+                            <h4>百分比区间赋分：</h4>
+                            <ul>
+                                <li>前10%：8分（金山中学8.9分）</li>
+                                <li>10%-24%：6分（金山中学6.9分）</li>
+                                <li>24%-40%：5分（金山中学5.9分）</li>
+                                <li>40%-60%：4分（金山中学4.9分）</li>
+                                <li>60%-76%：3分（金山中学3.9分）</li>
+                                <li>76%-90%：2分（金山中学2.9分）</li>
+                                <li>90%-100%：0分</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
             <!-- 科目选择区域 -->
             <div class="subject-section">
                 <h3>📚 选择处理科目</h3>
@@ -388,6 +547,7 @@
     <script>
         let selectedFile = null;
         let selectedSubject = '';
+        let selectedScoringMethod = 'fixed'; // 默认选择固定区间赋分
         let processingInterval = null;
 
         // 文件选择处理
@@ -399,6 +559,17 @@
                 document.getElementById('selectedFile').style.display = 'block';
                 showAlert('文件选择成功！', 'success');
             }
+        });
+
+        // 赋分方式选择处理
+        document.querySelectorAll('.scoring-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.scoring-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedScoringMethod = this.dataset.method;
+                const methodName = selectedScoringMethod === 'fixed' ? '固定区间赋分' : '百分比区间赋分';
+                showAlert(`已选择赋分方式: ${methodName}`, 'info');
+            });
         });
 
         // 科目选择处理
@@ -458,7 +629,8 @@
                     },
                     body: JSON.stringify({
                         filepath: uploadResult.filepath,
-                        subject: selectedSubject
+                        subject: selectedSubject,
+                        scoring_method: selectedScoringMethod
                     })
                 });
 
@@ -552,6 +724,10 @@
 
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 默认选择"固定区间赋分"
+            document.querySelector('.scoring-option[data-method="fixed"]').classList.add('selected');
+            selectedScoringMethod = 'fixed';
+            
             // 默认选择"所有科目"
             document.querySelector('.subject-option[data-subject=""]').classList.add('selected');
             selectedSubject = '';
