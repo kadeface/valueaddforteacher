@@ -116,9 +116,9 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-data/*.xls
-data/*.xlsx
-output/
+data/
+uploads/
+outputs/
 results/
 *.log
 temp/
