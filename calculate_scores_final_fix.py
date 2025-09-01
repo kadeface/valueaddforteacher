@@ -100,12 +100,13 @@ def extract_exam_names(df, subject):
     
     return sorted_exams, found_exams
 
-def calculate_scores_final_fix(input_file_path=None, subject=None):
+def calculate_scores_final_fix(input_file_path=None, subject=None, education_level='middle'):
     """最终修复版本，使用统一的百分比赋分规则
     
     Args:
         input_file_path: 输入文件路径
         subject: 科目名称
+        education_level: 教育阶段，'primary'为小学，'middle'为初中（默认）
     """
     
     if input_file_path is None:
@@ -118,7 +119,7 @@ def calculate_scores_final_fix(input_file_path=None, subject=None):
         # 处理指定科目
         return process_single_subject(input_file_path, subject)
 
-def process_single_subject(input_file_path, subject):
+def process_single_subject(input_file_path, subject, education_level='middle'):
     """处理单个科目"""
     print(f"开始处理科目: {subject}")
     
@@ -155,6 +156,31 @@ def process_single_subject(input_file_path, subject):
         
         # 获取总人数
         total_count = len(df)
+        
+        # 定义教育阶段配置
+        education_configs = {
+            'middle': {  # 初中
+                'metrics': ['平均分', '优秀率', '优良率', '合格率', '低分率'],
+                'weights': [0.3, 0.2, 0.2, 0.2, 0.1]  # 平均分0.3
+            },
+            'primary': {  # 小学
+                'metrics': ['平均分', '优秀率', '合格率', '低分率'],  # 去掉优良率
+                'weights': [0.5, 0.2, 0.2, 0.1]  # 平均分0.5
+            }
+        }
+        
+        # 根据教育阶段选择配置
+        if education_level not in education_configs:
+            print(f"警告: 未知的教育阶段 '{education_level}'，使用初中配置")
+            education_level = 'middle'
+        
+        current_config = education_configs[education_level]
+        base_metrics = current_config['metrics']
+        current_weights = current_config['weights']
+        
+        print(f"使用教育阶段: {education_level}")
+        print(f"指标: {base_metrics}")
+        print(f"权重: {current_weights}")
         
         # 定义统一的百分比赋分规则
         # 百分比区间：10%, 14%, 16%, 20%, 16%, 14%, 10%
@@ -248,8 +274,7 @@ def process_single_subject(input_file_path, subject):
         
         # 第一个考试的处理逻辑
         exam1_scores = []
-        # 使用与extract_exam_names函数相同的指标定义，保持一致性
-        base_metrics = ['平均分', '优秀率', '优良率', '合格率', '低分率']
+        # 使用当前教育阶段的指标定义
         
         for metric_name in base_metrics:
             # 尝试不同的列名格式（支持下划线和空格两种格式）
@@ -338,15 +363,13 @@ def process_single_subject(input_file_path, subject):
                     exam1_scores.append(score_col)
         
         # 计算第一个考试总分
-        if len(exam1_scores) == 5:
+        if len(exam1_scores) == len(current_weights):
             total_score_col = f'{first_exam}_{subject}总分'
-            df[total_score_col] = (
-                df[exam1_scores[0]] * 0.3 +  # 平均分
-                df[exam1_scores[1]] * 0.2 +  # 优秀率
-                df[exam1_scores[2]] * 0.2 +  # 优良率
-                df[exam1_scores[3]] * 0.2 +  # 合格率
-                df[exam1_scores[4]] * 0.1    # 低分率
-            )
+            # 使用当前教育阶段的权重计算总分
+            total_score = 0
+            for i, score_col in enumerate(exam1_scores):
+                total_score += df[score_col] * current_weights[i]
+            df[total_score_col] = total_score
             new_cols.append(total_score_col)
             total_score_cols.append(total_score_col)
         
@@ -480,15 +503,13 @@ def process_single_subject(input_file_path, subject):
                         print(f"  警告: 未找到前一个考试列: {metric_name}，跳过差值计算")
             
             # 计算当前考试总分
-            if len(exam_scores) == 5:
+            if len(exam_scores) == len(current_weights):
                 total_score_col = f'{current_exam}_{subject}总分'
-                df[total_score_col] = (
-                    df[exam_scores[0]] * 0.3 +  # 平均分差值
-                    df[exam_scores[1]] * 0.2 +  # 优秀率差值
-                    df[exam_scores[2]] * 0.2 +  # 优良率差值
-                    df[exam_scores[3]] * 0.2 +  # 合格率差值
-                    df[exam_scores[4]] * 0.1    # 低分率差值
-                )
+                # 使用当前教育阶段的权重计算总分
+                total_score = 0
+                for i, score_col in enumerate(exam_scores):
+                    total_score += df[score_col] * current_weights[i]
+                df[total_score_col] = total_score
                 new_cols.append(total_score_col)
                 total_score_cols.append(total_score_col)
         
@@ -571,8 +592,8 @@ def process_all_subjects(input_file_path):
                 print(f"   差值列数量: {len(diff_cols)}")
                 
                 # 检查是否所有指标都有差值列
-                # 使用与extract_exam_names函数相同的指标定义，保持一致性
-                metrics = ['平均分', '优秀率', '优良率', '合格率', '低分率']
+                # 使用当前教育阶段的指标定义
+                metrics = base_metrics
                 for metric in metrics:
                     diff_cols_for_metric = [col for col in diff_cols if metric in col]
                     print(f"   {metric}: {len(diff_cols_for_metric)} 个差值列")

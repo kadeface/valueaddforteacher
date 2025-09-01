@@ -12,6 +12,7 @@
 
 ### ✨ 主要特性
 
+- 🎯 **多教育阶段支持**：支持初中和小学两种教育阶段，使用不同的指标权重
 - 🎯 **多科目支持**：支持语文、数学、英语、物理、化学、道法、历史、地理、生物等9个科目
 - 🌐 **Web界面**：提供友好的网页操作界面，支持文件上传和实时进度显示
 - 📊 **智能数据处理**：自动识别Excel文件结构，支持多种列名格式
@@ -80,6 +81,26 @@ result = calculate_scores_final_fix.process_single_subject('data/2025Mid3.xls', 
 print('处理完成')
 "
 ```
+
+## 🎯 教育阶段配置
+
+### 初中教育阶段（默认）
+- **指标权重**：
+  - 平均分：30%
+  - 优秀率：20%
+  - 优良率：20%
+  - 合格率：20%
+  - 低分率：10%
+- **适用场景**：初中各年级的教师评价
+
+### 小学教育阶段
+- **指标权重**：
+  - 平均分：50%
+  - 优秀率：20%
+  - 合格率：20%
+  - 低分率：10%
+- **适用场景**：小学各年级的教师评价
+- **特点**：去掉"优良率"指标，提升"平均分"权重至50%
 
 ## 📊 数据格式要求
 
@@ -242,44 +263,45 @@ Flask Web应用，提供文件上传、处理和下载功能。
 
 ### Web界面操作
 
-1. **上传文件**：选择包含教师数据的Excel文件
-2. **选择科目**：选择"所有科目"或特定科目
-3. **开始处理**：点击"开始处理"按钮
-4. **查看进度**：实时显示处理进度
-5. **下载结果**：处理完成后下载结果文件
+1. **选择教育阶段**：选择"初中"或"小学"教育阶段
+2. **上传文件**：选择包含教师数据的Excel文件
+3. **选择科目**：选择"所有科目"或特定科目
+4. **开始处理**：点击"开始处理"按钮
+5. **查看进度**：实时显示处理进度
+6. **下载结果**：处理完成后下载结果文件
 
 ### 命令行操作
 
 ```bash
-# 处理默认文件的所有科目（使用固定区间赋分）
+# 处理默认文件的所有科目（使用初中教育阶段，默认）
 python3 calculate_scores_final_fix.py
 
-# 处理指定文件的所有科目（使用固定区间赋分）
+# 处理指定文件的所有科目（使用初中教育阶段）
 python3 -c "
 import calculate_scores_final_fix
-result = calculate_scores_final_fix('path/to/your/file.xls')
+result = calculate_scores_final_fix('path/to/your/file.xls', education_level='middle')
 print('处理完成')
 "
 
-# 处理指定文件的特定科目（使用固定区间赋分）
+# 处理指定文件的所有科目（使用小学教育阶段）
 python3 -c "
 import calculate_scores_final_fix
-result = calculate_scores_final_fix('path/to/your/file.xls', '语文', 'fixed')
+result = calculate_scores_final_fix('path/to/your/file.xls', education_level='primary')
+print('处理完成')
+"
+
+# 处理指定文件的特定科目（使用初中教育阶段）
+python3 -c "
+import calculate_scores_final_fix
+result = calculate_scores_final_fix('path/to/your/file.xls', '语文', 'middle')
 print('语文科目处理完成')
 "
 
-# 处理指定文件的特定科目（使用百分比区间赋分）
+# 处理指定文件的特定科目（使用小学教育阶段）
 python3 -c "
 import calculate_scores_final_fix
-result = calculate_scores_final_fix('path/to/your/file.xls', '语文', 'percentage')
+result = calculate_scores_final_fix('path/to/your/file.xls', '语文', 'primary')
 print('语文科目处理完成')
-"
-
-# 处理所有科目（使用百分比区间赋分）
-python3 -c "
-import calculate_scores_final_fix
-result = calculate_scores_final_fix('path/to/your/file.xls', scoring_method='percentage')
-print('所有科目处理完成')
 "
 ```
 

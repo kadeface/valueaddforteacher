@@ -60,6 +60,7 @@ def process_file():
     data = request.get_json()
     filepath = data.get('filepath')
     subject = data.get('subject', '')  # 空字符串表示处理所有科目
+    education_level = data.get('education_level', 'middle')  # 教育阶段，默认初中
     
     if not filepath or not os.path.exists(filepath):
         return jsonify({'error': '文件不存在'}), 400
@@ -72,13 +73,13 @@ def process_file():
     processing_status['output_files'] = []
     
     # 在新线程中处理文件
-    thread = threading.Thread(target=process_file_thread, args=(filepath, subject))
+    thread = threading.Thread(target=process_file_thread, args=(filepath, subject, education_level))
     thread.daemon = True
     thread.start()
     
     return jsonify({'success': True, 'message': '开始处理文件'})
 
-def process_file_thread(filepath, subject):
+def process_file_thread(filepath, subject, education_level):
     global processing_status
     
     try:
@@ -91,7 +92,7 @@ def process_file_thread(filepath, subject):
             processing_status['message'] = f'正在处理科目: {subject}...'
             processing_status['progress'] = 30
             
-            result_df = calculate_scores_final_fix(filepath, subject, scoring_method)
+            result_df = calculate_scores_final_fix(filepath, subject, education_level)
             if result_df is not None:
                 output_filename = f"{subject}_计算结果.xlsx"
                 output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -118,7 +119,7 @@ def process_file_thread(filepath, subject):
                 processing_status['message'] = f'正在处理科目: {subject_name} ({i+1}/{total_subjects})...'
                 processing_status['progress'] = 30 + int(50 * (i / total_subjects))
                 
-                result_df = calculate_scores_final_fix(filepath, subject_name, scoring_method)
+                result_df = calculate_scores_final_fix(filepath, subject_name, education_level)
                 if result_df is not None:
                     output_filename = f"{subject_name}_计算结果.xlsx"
                     output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
