@@ -423,35 +423,16 @@
                 </div>
             </div>
 
-            <!-- 赋分方式选择区域 -->
+            <!-- 赋分规则说明区域 -->
             <div class="subject-section">
-                <h3>⚖️ 选择赋分方式</h3>
-                <p>选择计算排名和赋分的方式，不同方式适用于不同规模的学校</p>
-                
-                <div class="scoring-options">
-                    <div class="scoring-option" data-method="fixed">
-                        <strong>📊 固定区间赋分</strong><br>
-                        <small>基于固定排名区间的传统赋分方式<br>
-                        适合：固定规模的学校，排名区间固定</small>
-                    </div>
-                    <div class="scoring-option" data-method="percentage">
-                        <strong>📈 百分比区间赋分</strong><br>
-                        <small>基于排名百分比的现代赋分方式<br>
-                        适合：不同规模的学校，相对排名更公平</small>
-                    </div>
-                </div>
+                <h3>⚖️ 统一百分比赋分规则</h3>
+                <p>使用统一的百分比区间赋分方式，适用于任意规模的学校</p>
                 
                 <div class="scoring-info">
-                    <details>
-                        <summary>📋 赋分方式详细说明</summary>
+                    <details open>
+                        <summary>📋 赋分规则详细说明</summary>
                         <div class="info-content">
-                            <h4>固定区间赋分：</h4>
-                            <ul>
-                                <li>总人数≤20人：第1-3名8分，第4-7名6分，第8-12名5分...</li>
-                                <li>总人数>20人：第1-18名8分，第19-43名6分，第44-71名5分...</li>
-                                <li>金山中学使用特殊赋分（8.9, 6.9, 5.9...）</li>
-                            </ul>
-                            <h4>百分比区间赋分：</h4>
+                            <h4>统一百分比赋分规则：</h4>
                             <ul>
                                 <li>前10%：8分（金山中学8.9分）</li>
                                 <li>10%-24%：6分（金山中学6.9分）</li>
@@ -460,6 +441,13 @@
                                 <li>60%-76%：3分（金山中学3.9分）</li>
                                 <li>76%-90%：2分（金山中学2.9分）</li>
                                 <li>90%-100%：0分</li>
+                            </ul>
+                            <h4>优势：</h4>
+                            <ul>
+                                <li>适用于任意规模的学校</li>
+                                <li>相对排名更公平</li>
+                                <li>自动适应不同总人数</li>
+                                <li>使用四舍五入确保精确性</li>
                             </ul>
                         </div>
                     </details>
@@ -547,7 +535,6 @@
     <script>
         let selectedFile = null;
         let selectedSubject = '';
-        let selectedScoringMethod = 'fixed'; // 默认选择固定区间赋分
         let processingInterval = null;
 
         // 文件选择处理
@@ -561,16 +548,7 @@
             }
         });
 
-        // 赋分方式选择处理
-        document.querySelectorAll('.scoring-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.scoring-option').forEach(opt => opt.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedScoringMethod = this.dataset.method;
-                const methodName = selectedScoringMethod === 'fixed' ? '固定区间赋分' : '百分比区间赋分';
-                showAlert(`已选择赋分方式: ${methodName}`, 'info');
-            });
-        });
+
 
         // 科目选择处理
         document.querySelectorAll('.subject-option').forEach(option => {
@@ -629,8 +607,7 @@
                     },
                     body: JSON.stringify({
                         filepath: uploadResult.filepath,
-                        subject: selectedSubject,
-                        scoring_method: selectedScoringMethod
+                        subject: selectedSubject
                     })
                 });
 
@@ -724,10 +701,6 @@
 
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 默认选择"固定区间赋分"
-            document.querySelector('.scoring-option[data-method="fixed"]').classList.add('selected');
-            selectedScoringMethod = 'fixed';
-            
             // 默认选择"所有科目"
             document.querySelector('.subject-option[data-subject=""]').classList.add('selected');
             selectedSubject = '';
