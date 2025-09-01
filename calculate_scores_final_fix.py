@@ -323,8 +323,11 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
                         rank_col = f'{first_exam}_{metric_name}_排名'
                         score_col = f'{first_exam}_{metric_name}_得分'
                         
+                        # 使用pandas.rank(method='min')计算排名，保持与综合排名一致
+                        sorted_df[rank_col] = sorted_df[col_name].rank(ascending=ascending, method='min')
+                        
                         for idx, row in sorted_df.iterrows():
-                            rank = idx + 1
+                            rank = row[rank_col]
                             score = assign_score(rank, False)  # 非金山中学使用常规赋分
                             
                             # 找到对应的原始行索引
@@ -341,12 +344,15 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
                         sorted_df = df.sort_values(col_name, ascending=ascending)
                         sorted_df = sorted_df.reset_index(drop=True)
                         
-                        # 计算排名和得分ß
+                        # 计算排名和得分
                         rank_col = f'{first_exam}_{metric_name}_排名'
                         score_col = f'{first_exam}_{metric_name}_得分'
                         
+                        # 使用pandas.rank(method='min')计算排名，保持与综合排名一致
+                        sorted_df[rank_col] = sorted_df[col_name].rank(ascending=ascending, method='min')
+                        
                         for idx, row in sorted_df.iterrows():
-                            rank = idx + 1
+                            rank = row[rank_col]
                             is_jinshan = row['学校名称'] == '金山中学'
                             score = assign_score(rank, is_jinshan)
                             
@@ -369,7 +375,8 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
             total_score = 0
             for i, score_col in enumerate(exam1_scores):
                 total_score += df[score_col] * current_weights[i]
-            df[total_score_col] = total_score
+            # 统一精度到3位小数，避免浮点数精度问题导致的排名不一致
+            df[total_score_col] = total_score.round(2)
             new_cols.append(total_score_col)
             total_score_cols.append(total_score_col)
         
@@ -460,8 +467,11 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
                                 diff_rank_col = f'{previous_exam}-{current_exam}_{metric_name}_差值排名'
                                 diff_score_col = f'{previous_exam}-{current_exam}_{metric_name}_差值得分'
                                 
+                                # 使用pandas.rank(method='min')计算排名，保持与综合排名一致
+                                sorted_df[diff_rank_col] = sorted_df[diff_col].rank(ascending=ascending, method='min')
+                                
                                 for idx, row in sorted_df.iterrows():
-                                    rank = idx + 1
+                                    rank = row[diff_rank_col]
                                     score = assign_score(rank, False)  # 非金山中学使用常规赋分
                                     
                                     # 找到对应的原始行索引
@@ -482,8 +492,11 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
                                 diff_rank_col = f'{previous_exam}-{current_exam}_{metric_name}_差值排名'
                                 diff_score_col = f'{previous_exam}-{current_exam}_{metric_name}_差值得分'
                                 
+                                # 使用pandas.rank(method='min')计算排名，保持与综合排名一致
+                                sorted_df[diff_rank_col] = sorted_df[diff_col].rank(ascending=ascending, method='min')
+                                
                                 for idx, row in sorted_df.iterrows():
-                                    rank = idx + 1
+                                    rank = row[diff_rank_col]
                                     is_jinshan = row['学校名称'] == '金山中学'
                                     score = assign_score(rank, is_jinshan)
                                     
@@ -509,7 +522,8 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
                 total_score = 0
                 for i, score_col in enumerate(exam_scores):
                     total_score += df[score_col] * current_weights[i]
-                df[total_score_col] = total_score
+                # 统一精度到3位小数，避免浮点数精度问题导致的排名不一致
+                df[total_score_col] = total_score.round(2)
                 new_cols.append(total_score_col)
                 total_score_cols.append(total_score_col)
         
@@ -520,20 +534,20 @@ def process_single_subject(input_file_path, subject, education_level='middle'):
                 df[total_score_cols[1]] * 0.2 +  # 第二个考试总分
                 df[total_score_cols[2]] * 0.2 +  # 第三个考试总分
                 df[total_score_cols[3]] * 0.2    # 第四个考试总分
-            )
+            ).round(2)  # 统一精度到3位小数
         elif len(total_score_cols) == 3:
             df[f'{subject}综合得分'] = (
                 df[total_score_cols[0]] * 0.4 +  # 第一个考试总分
                 df[total_score_cols[1]] * 0.3 +  # 第二个考试总分
                 df[total_score_cols[2]] * 0.3    # 第三个考试总分
-            )
+            ).round(2)  # 统一精度到3位小数
         elif len(total_score_cols) == 2:
             df[f'{subject}综合得分'] = (
                 df[total_score_cols[0]] * 0.4 +  # 第一个考试总分
                 df[total_score_cols[1]] * 0.6    # 第二个考试总分
-            )
+            ).round(2)  # 统一精度到3位小数
         elif len(total_score_cols) == 1:
-            df[f'{subject}综合得分'] = df[total_score_cols[0]]
+            df[f'{subject}综合得分'] = df[total_score_cols[0]].round(2)  # 统一精度到3位小数
         else:
             print(f"警告: {subject} 没有生成任何总分列，无法计算综合得分")
             df[f'{subject}综合得分'] = 0.0
@@ -592,9 +606,9 @@ def process_all_subjects(input_file_path):
                 print(f"   差值列数量: {len(diff_cols)}")
                 
                 # 检查是否所有指标都有差值列
-                # 使用当前教育阶段的指标定义
-                metrics = base_metrics
-                for metric in metrics:
+                # 使用默认的初中教育阶段指标定义
+                default_metrics = ['平均分', '优秀率', '优良率', '合格率', '低分率']
+                for metric in default_metrics:
                     diff_cols_for_metric = [col for col in diff_cols if metric in col]
                     print(f"   {metric}: {len(diff_cols_for_metric)} 个差值列")
             else:
