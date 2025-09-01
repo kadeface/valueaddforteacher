@@ -175,16 +175,19 @@ def process_single_subject(input_file_path, subject):
             current_start = 1
             
             for start_pct, end_pct, regular_score, jinshan_score in percentage_intervals:
-                # 计算当前区间的结束排名
-                end_rank = round(end_pct * total_count)
+                # 计算区间长度（人数）
+                interval_length = round((end_pct - start_pct) * total_count)
+                
+                # 确保区间至少包含1个人
+                if interval_length < 1:
+                    interval_length = 1
+                
+                # 计算结束排名
+                end_rank = current_start + interval_length - 1
                 
                 # 确保结束排名不超过总人数
                 if end_rank > total_count:
                     end_rank = total_count
-                
-                # 确保区间至少包含1个人
-                if current_start > end_rank:
-                    end_rank = current_start
                 
                 intervals.append((current_start, end_rank, regular_score, jinshan_score))
                 
