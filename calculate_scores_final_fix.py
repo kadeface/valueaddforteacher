@@ -170,26 +170,38 @@ def process_single_subject(input_file_path, subject):
         ]
         
         def generate_scoring_intervals(total_count):
-            """根据总人数生成赋分区间，使用四舍五入法"""
+            """根据总人数生成赋分区间，使用四舍五入法，确保无重叠"""
             intervals = []
+            current_start = 1
+            
             for start_pct, end_pct, regular_score, jinshan_score in percentage_intervals:
-                start_rank = round(start_pct * total_count)
+                # 计算当前区间的结束排名
                 end_rank = round(end_pct * total_count)
                 
-                # 确保起始排名至少为1
-                if start_rank == 0:
-                    start_rank = 1
+                # 确保结束排名不超过总人数
+                if end_rank > total_count:
+                    end_rank = total_count
                 
-                intervals.append((start_rank, end_rank, regular_score, jinshan_score))
+                # 确保区间至少包含1个人
+                if current_start > end_rank:
+                    end_rank = current_start
+                
+                intervals.append((current_start, end_rank, regular_score, jinshan_score))
+                
+                # 下一个区间的开始排名是当前区间结束排名+1
+                current_start = end_rank + 1
+                
+                # 如果已经覆盖了所有人数，退出循环
+                if current_start > total_count:
+                    break
             
             return intervals
         
         def assign_score(rank, is_jinshan):
-            """统一的赋分函数，基于百分比区间和四舍五入"""
-            percentage = rank / total_count
-            
-            for start_pct, end_pct, regular_score, jinshan_score in percentage_intervals:
-                if start_pct <= percentage <= end_pct:
+            """统一的赋分函数，基于修复后的区间，确保无重叠"""
+            # 使用生成的区间而不是百分比区间
+            for start, end, regular_score, jinshan_score in intervals:
+                if start <= rank <= end:
                     return jinshan_score if is_jinshan else regular_score
             
             return 0

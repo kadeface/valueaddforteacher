@@ -69,16 +69,30 @@ def test_different_sizes():
     ]
     
     def generate_intervals(total_count):
-        """生成指定总人数的赋分区间"""
+        """生成指定总人数的赋分区间，确保无重叠"""
         intervals = []
+        current_start = 1
+        
         for start_pct, end_pct, regular_score, jinshan_score in percentage_intervals:
-            start_rank = round(start_pct * total_count)
+            # 计算当前区间的结束排名
             end_rank = round(end_pct * total_count)
             
-            if start_rank == 0:
-                start_rank = 1
+            # 确保结束排名不超过总人数
+            if end_rank > total_count:
+                end_rank = total_count
             
-            intervals.append((start_rank, end_rank, regular_score, jinshan_score))
+            # 确保区间至少包含1个人
+            if current_start > end_rank:
+                end_rank = current_start
+            
+            intervals.append((current_start, end_rank, regular_score, jinshan_score))
+            
+            # 下一个区间的开始排名是当前区间结束排名+1
+            current_start = end_rank + 1
+            
+            # 如果已经覆盖了所有人数，退出循环
+            if current_start > total_count:
+                break
         
         return intervals
     
